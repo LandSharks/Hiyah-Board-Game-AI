@@ -248,7 +248,7 @@ public class Alice {
 		} else if (b.get(1).get(4) != null && b.get(1).get(4).player == 1) {
 			return Integer.MIN_VALUE - depth;
 		}
-		int worstScore = Integer.MIN_VALUE;
+		int worstScore = Integer.MAX_VALUE;
 		int score = 0;
 		for (int i = 0; i < MAX_HEIGHT; i++) {
 			for (int j = 0; j < MAX_WIDTH; j++) {
