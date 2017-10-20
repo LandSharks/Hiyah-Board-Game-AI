@@ -6,7 +6,7 @@ import java.util.Scanner;
 public class Alice {
 	
 	public static ArrayList<ArrayList<GamePiece>> gameBoard;
-	public static final int MAX_DEPTH = 5;
+	public static final int MAX_DEPTH = 3;
 	public static final int MAX_WIDTH = 7;
 	public static final int MAX_HEIGHT = 8;
 	public static int currentPlayer;
@@ -167,12 +167,15 @@ public class Alice {
 		}
 		return bestMove;
 	}
-	
-	public static Object max(ArrayList<ArrayList<GamePiece>> b, int depth) {
+	//Maybe return gameMove?
+	public static int max(ArrayList<ArrayList<GamePiece>> b, int depth) {
 		if(depth >= MAX_DEPTH) {
-			return null;
+			return 0;
+		} else if(b.get(6).get(4) != null && b.get(6).get(4).player == 2) {
+			return Integer.MAX_VALUE - depth;
 		}
 		int bestScore = Integer.MIN_VALUE;
+		int score = 0;
 		for(int i = 0; i < comLegalPieces.size(); i++) {
 			GamePiece current = comLegalPieces.get(i);
 			ArrayList<ArrayList<GamePiece>> cloned = cloneBoard(b);
@@ -183,21 +186,28 @@ public class Alice {
 				int destC = Character.getNumericValue(key.charAt(1));
 				makeMoveOnCloned(cloned, cloned.get(moved.row).get(moved.col), destR, destC);
 				movesForPieces(cloned);
-				min(cloned, depth + 1);
+				score = min(cloned, depth + 1);
+				if(score > bestScore) {
+					bestScore = score;
+				}
+				//undo move
 				moved.row = current.row;
 				moved.col = current.col;
 				cloned.get(moved.row).set(moved.col, moved);
 				cloned.get(destR).set(destC, null);
 			}
 		}
-		return new Object();
+		return bestScore;
 	}
 	
-	public static Object min(ArrayList<ArrayList<GamePiece>> b, int depth) {
-		if(depth >= MAX_DEPTH) {
-			return null;
+	public static int min(ArrayList<ArrayList<GamePiece>> b, int depth) {
+		if(depth > MAX_DEPTH) {
+			return 0;
+		} else if(b.get(1).get(4) != null && b.get(1).get(4).player == 1) {
+			return Integer.MIN_VALUE - depth;
 		}
 		int bestScore = Integer.MAX_VALUE;
+		int score = 0;
 		for(int i = 0; i < comLegalPieces.size(); i++) {
 			GamePiece current = comLegalPieces.get(i);
 			ArrayList<ArrayList<GamePiece>> cloned = cloneBoard(b);
@@ -208,14 +218,18 @@ public class Alice {
 				int destC = Character.getNumericValue(key.charAt(1));
 				makeMoveOnCloned(cloned, cloned.get(moved.row).get(moved.col), destR, destC);
 				movesForPieces(cloned);
-				max(cloned, depth + 1);
+				score = max(cloned, depth + 1);
+				if(score < bestScore) {
+					bestScore = score;
+				}
+				//undo move
 				moved.row = current.row;
 				moved.col = current.col;
 				cloned.get(moved.row).set(moved.col, moved);
 				cloned.get(destR).set(destC, null);
 			}
 		}
-		return new Object();
+		return bestScore;
 	}
 	
 	public static void makeMoveOnCloned(ArrayList<ArrayList<GamePiece>> b, GamePiece p, int destR, int destC) {
