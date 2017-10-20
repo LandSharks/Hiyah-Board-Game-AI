@@ -1,17 +1,15 @@
 import java.util.ArrayList;
+import java.util.Hashtable;
 
-public class King implements Cloneable, GamePiece{
+public class King extends GamePiece implements Cloneable{
 
-	public int col;
-	public int row;
-	public int player; // 1 = HUMAN 2 = COM
 	public char character;
 	public int attackValue;
 	
 	public King(int player, int row, int col) {
-		this.player = player;
-		this.row = row;
-		this.col = col;
+		super.player = player;
+		super.row = row;
+		super.col = col;
 		this.character = 'K';
 		if(player == 1) {
 			attackValue = Integer.MAX_VALUE;
@@ -20,31 +18,34 @@ public class King implements Cloneable, GamePiece{
 		}
 	}
 	
+	
 	@Override
 	public void move(int[] move) {
 		System.out.println("Error the king cannot move");
 	}
 
 	@Override
-	public ArrayList<int[]> getMoves() {
+	public Hashtable<String, Integer> getMoves() {
 		return null;
 	}
 
+	@Override
+	public int getAttack() {
+		return this.attackValue;
+	}
 
 	@Override
 	public void generateMoves(ArrayList<ArrayList<GamePiece>> board) {
 
-	}
-
-	//King cannot do anything. Special case.
-	@Override
-	public boolean legal(int row, int col, ArrayList<GamePiece> gamePieces) {
-		return false;
 	}
 	
 	@Override
 	public Object clone() {
 		King p = new King(this.player, this.row, this.col);
 		return p;
+	}
+	
+	public String toString() {
+		return "" + character;
 	}
 }

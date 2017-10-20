@@ -1,19 +1,19 @@
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.Random;
 import java.util.Scanner;
 
 public class Alice {
 	
-	public static char[][] board;
+	public static ArrayList<ArrayList<GamePiece>> board;
 	public static final int MAX_DEPTH = 5;
 	public static final int MAX_WIDTH = 7;
 	public static final int MAX_HEIGHT = 8;
-	public static final char SMALL_SAMURAI = 's';
-	public static final char SMALL_NINJA = 'n';
-	public static final char SAMURAI = 'S';
-	public static final char NINJA = 'N';
-	public static final char KING = 'K';
 	public static int currentPlayer;
 	public static int turnCounter;
-	
+	public static ArrayList<String> playerLegal;
+	public static ArrayList<String> comLegal;
+	public static ArrayList<GamePiece> comLegalPieces;
 	
 	public static void gameLoop() {
 		Scanner in = new Scanner(System.in);
@@ -28,12 +28,15 @@ public class Alice {
 		System.out.println(textboard);
 		boolean gameOn = true;
 		int[][] translated = new int[2][2];
+		Hashtable<String, Integer> piecesMoves;
+		MovesForPieces();
 		while(gameOn) {
 			turnCounter++;
 			System.out.println("Turn " + turnCounter);
 			String[] moveInput = new String[2];
 			do {
-				if(currentPlayer % 2 != 0) {
+				if(currentPlayer == 1) {
+					System.out.println(playerLegal);
 					System.out.print("Enter HUMAN move (initial destination): ");
 					moveInput[0] = in.next();
 					moveInput[1] = in.next();
@@ -42,18 +45,26 @@ public class Alice {
 					moveInput = generateMove();
 				}
 				translated = translateMove(moveInput);
-			} while(!checkIfLegal(translated[0][0], translated[0][1], translated[1][0], translated[1][1]));
+				GamePiece selected = board.get(translated[0][0]).get(translated[0][1]);
+				if(selected != null && selected.player == currentPlayer) {
+					piecesMoves = selected.getMoves();
+				} else {
+					System.out.println("No Piece exists at that point or that is not your piece.");
+					piecesMoves = new Hashtable<>();
+				}
+			} while(!piecesMoves.containsKey("" + translated[1][0] + translated[1][1]));
 			updateBoard(translated[0][0], translated[0][1], translated[1][0], translated[1][1]);
-			gameOn = checkGameOver();
 			textboard = boardToString();
 			System.out.println(textboard);
-			currentPlayer++;
+			MovesForPieces();
+			gameOn = checkTie();
+			if(currentPlayer == 1) {
+				currentPlayer++;
+			} else {
+				currentPlayer--;
+			}
 		}
-		if(currentPlayer == 1) {
-			System.out.println("HUMAN WINS");
-		} else {
-			System.out.println("ALICE WINS!");
-		}
+		System.out.println("Tie game!");
 	}
 	
 	public static String boardToString() {
@@ -64,12 +75,10 @@ public class Alice {
 			s.append(' ');
 			for(int j = 0; j < MAX_WIDTH; j++) {
 				s.append('|');
-				if(board[i][j] != SMALL_SAMURAI && board[i][j] != SMALL_NINJA 
-						&& board[i][j] != SAMURAI && board[i][j] != KING
-						&& board[i][j] != NINJA ) {
+				if(board.get(i).get(j) == null) {
 					s.append(' ');
 				} else {
-					s.append(board[i][j]);
+					s.append(board.get(i).get(j));
 				}
 			}
 			s.append('|');
@@ -86,53 +95,43 @@ public class Alice {
 		return s.toString();
 	}
 	
-	public static boolean checkIfLegal(int initR, int initC, int destR, int destC) {
-
-		if(board[initR][initC] == NINJA) {
-			//This is gonna mess with you later when you attemp the only move backwards thing
-			if(Math.abs(destR - initR) != Math.abs(destC - initC) || initR - destR < 0) {
-				return false;
-			}
-			//todo
-			//cannot jump over other pieces
-			//can only move backwards if attacking
-		} else if(board[initR][initC] == SAMURAI) {
-			if(initC - destC != 0 && initR - destR != 0) {
-				return false;
-			}
-			if(destR - initR < 0) {
-				return false;
-			}
-			//todo
-			//cannot jump over pieces
-			//never moves backwards
-			//can only attack in the foward direction
-		} else if(board[initR][initC] == SMALL_NINJA) {
-			if(Math.abs(destR - initR) != 1 && Math.abs(destC - initC) != 1) {
-				return false;
-			}
-			//adhere to small ninja rules
-		} else if(board[initR][initC] == SMALL_SAMURAI) {
-			if(initC - destC != 0 && initR - destR != 0) {
-				return false;
-			}
-			if(destR - initR < 0) {
-				return false;
-			}
-			//adhere to small samurai rules
-		} else if(board[initR][initC] == KING) {
+	public static boolean checkTie() {
+		if(playerLegal.isEmpty() && comLegal.isEmpty()) {
 			return false;
+		} else if(playerLegal.isEmpty()) {
+			gameOver("No legal moves for HUMAN");
+		} else if(comLegal.isEmpty()) {
+			gameOver("No legal moves for ALICE");
 		}
-		
 		return true;
 	}
 	
-	public static boolean checkGameOver() {
-		return true;
+	public static void gameOver(String additional) {
+		String textboard = boardToString();
+		System.out.println(textboard);
+		System.out.println(additional);
+		if(currentPlayer == 1) {
+			System.out.println("Human WINS!");
+		} else {
+			System.out.println("Alice WINS!");
+		}
+		System.exit(1);
 	}
 	
 	public static String[] generateMove() {
-		return new String[] {"A0", "B6"};
+		//Random Generation
+		Random rand = new Random();
+		int piece = rand.nextInt(comLegal.size());
+
+		String[] move = new String[2];
+		move[0] = comLegal.get(piece).substring(0, 2);
+		move[1] = comLegal.get(piece).substring(6, 8);
+		
+		return move;
+	}
+	
+	public static void generateSmartMove() {
+		
 	}
 	
 	public static int[][] translateMove(String[] s) {
@@ -147,52 +146,162 @@ public class Alice {
 		return trans;
 	}
 	
-	public static void updateBoard(int initR, int initC, int destR, int destC) {
-		char piece = board[initR][initC];
-		board[destR][destC] = piece;
-		board[initR][initC] = ' ';
+	public static String reverseTranslate(int row, int col) {
+		StringBuilder build = new StringBuilder();
+		char colC = (char)(col + 65);
+		build.append(colC);
+		build.append(8 - (row));
+		return build.toString();
 	}
 	
-	public static void attack(int r, int c) {
-		
+	public static void updateBoard(int initR, int initC, int destR, int destC) {
+		GamePiece piece = board.get(initR).get(initC);
+		board.get(destR).set(destC, piece);
+		board.get(initR).set(initC, null);
+		piece.col = destC;
+		piece.row = destR;
+		if(currentPlayer == 1 && checkPlayerAttack(destR, destC)) {
+			System.out.println("HIYA!");
+			GamePiece victim = board.get(destR - 1).get(destC);
+			if(victim instanceof King) {
+				board.get(destR - 1).set(destC, null);
+				gameOver("COM KING SLAIN!");
+			} else if(victim instanceof Ninja) {
+				MiniNinja newPiece = new MiniNinja(2, destR - 1, destC);
+				board.get(destR - 1).set(destC, newPiece);
+			} else if(victim instanceof Samurai) {
+				MiniSamurai newPiece = new MiniSamurai(2, destR - 1, destC);
+				board.get(destR - 1).set(destC, newPiece);
+			} else if(victim instanceof MiniNinja) {
+				board.get(destR - 1).set(destC, null);
+			} else if(victim instanceof MiniSamurai) {
+				board.get(destR - 1).set(destC, null);
+			}
+		} else if(currentPlayer == 2 && checkComAttack(destR, destC)){
+			System.out.println("HIYA!");
+			GamePiece victim = board.get(destR + 1).get(destC);
+			if(victim instanceof King) {
+				board.get(destR + 1).set(destC, null);
+				gameOver("HUMAN KING SLAIN!");
+			} else if(victim instanceof Ninja) {
+				MiniNinja newPiece = new MiniNinja(1, destR + 1, destC);
+				board.get(destR + 1).set(destC, newPiece);
+			} else if(victim instanceof Samurai) {
+				MiniSamurai newPiece = new MiniSamurai(1, destR + 1, destC);
+				board.get(destR + 1).set(destC, newPiece);
+			} else if(victim instanceof MiniNinja) {
+				board.get(destR + 1).set(destC, null);
+			} else if(victim instanceof MiniSamurai) {
+				board.get(destR + 1).set(destC, null);
+			}
+		}
 	}
+	
+	public static boolean checkPlayerAttack(int destR, int destC) {
+		return currentPlayer == 1 && destR - 1 >= 0 && board.get(destR - 1).get(destC) != null 
+				&& board.get(destR - 1).get(destC).player == 2;
+	}
+	
+	public static boolean checkComAttack(int destR, int destC) {
+		return currentPlayer == 2 && destR + 1 < MAX_HEIGHT && board.get(destR + 1).get(destC) != null
+				&& board.get(destR + 1).get(destC).player == 1;
+	}
+	
 	public static void init(int player) {
 		turnCounter = 0;
-		board = new char[MAX_HEIGHT][MAX_WIDTH];
+		board = new ArrayList<>();
+		playerLegal = new ArrayList<>();
+		comLegal = new ArrayList<>();
+		comLegalPieces = new ArrayList<>();
+		for(int i = 0; i < MAX_HEIGHT; i++) {
+			board.add(new ArrayList<GamePiece>());
+			for(int j = 0; j < MAX_WIDTH; j++) {
+				board.get(i).add(null);
+			}
+		}
 		currentPlayer = player;
 		//Topside
-		board[0][3] = KING;
+		board.get(0).set(3, new King(2, 0, 3));
 		for(int i = 0; i < 3; i++) {
-			board[1][i] = NINJA;
+			GamePiece piece = new Ninja(2, 1, i);
+			board.get(1).set(i, piece);
 		}
 		for(int i = 4; i < MAX_WIDTH; i++) {
-			board[1][i] = SAMURAI;
+			GamePiece piece = new Samurai(2, 1, i);
+			board.get(1).set(i, piece);
 		}
 		for(int i = 0; i < 3; i++) {
-			board[2][i] = SMALL_SAMURAI;
+			GamePiece piece = new MiniSamurai(2, 2, i);
+			board.get(2).set(i, piece);
 		}
 		for(int i = 4; i < MAX_WIDTH; i++) {
-			board[2][i] = SMALL_NINJA;
+			GamePiece piece = new MiniNinja(2, 2, i);
+			board.get(2).set(i, piece);
 		}
 		
 		//Bottomside
-		board[7][3] = KING;
+		board.get(7).set(3, new King(1, 7, 3));
 		for(int i = 0; i < 3; i++) {
-			board[6][i] = SAMURAI;
+			GamePiece piece = new Samurai(1, 6, i);
+			board.get(6).set(i, piece);
 		}
 		for(int i = 4; i < MAX_WIDTH; i++) {
-			board[6][i] = NINJA;
+			GamePiece piece = new Ninja(1, 6, i);
+			board.get(6).set(i, piece);
 		}
 		for(int i = 0; i < 3; i++) {
-			board[5][i] = SMALL_NINJA;
+			GamePiece piece = new MiniNinja(1, 5, i);
+			board.get(5).set(i, piece);
 		}
 		for(int i = 4; i < MAX_WIDTH; i++) {
-			board[5][i] = SMALL_SAMURAI;
+			GamePiece piece = new MiniSamurai(1, 5, i);
+			board.get(5).set(i, piece);
 		}
 	}
 	
-	public static void minMax() {
-		
+	public static void MovesForPieces() {
+		playerLegal.clear();
+		comLegal.clear();
+		comLegalPieces.clear();
+		for(int i = 0; i < MAX_HEIGHT; i++) {
+			for(int j = 0; j < MAX_WIDTH; j++) {
+				if(board.get(i).get(j) != null) {
+					GamePiece piece = board.get(i).get(j);
+					piece.generateMoves(board);
+					if(piece.player == 1 && !(piece instanceof King)) {
+						Hashtable<String, Integer> moves = piece.getMoves();
+						if(!moves.isEmpty()) {
+							StringBuilder build = new StringBuilder();
+							build.append(reverseTranslate(piece.row, piece.col));
+							build.append(" -> ");
+							for(String s : moves.keySet()) {
+								int potentialR = Character.getNumericValue(s.charAt(0));
+								int potentialC = Character.getNumericValue(s.charAt(1));
+								build.append(reverseTranslate(potentialR, potentialC));
+								build.append(" ");
+							}
+							playerLegal.add(build.toString());
+						}
+					} else if(!(piece instanceof King)){
+						Hashtable<String, Integer> moves = piece.getMoves();
+						comLegalPieces.add(piece);
+						if(!moves.isEmpty()) {
+							StringBuilder build = new StringBuilder();
+							build.append(reverseTranslate(piece.row, piece.col));
+							build.append(" -> ");
+							for(String s : moves.keySet()) {
+								int potentialR = Character.getNumericValue(s.charAt(0));
+								int potentialC = Character.getNumericValue(s.charAt(1));
+								build.append(reverseTranslate(potentialR, potentialC));
+								build.append(" ");
+							}
+							comLegal.add(build.toString());
+						}
+					}
+					
+				}
+			}
+		}
 	}
 	
 	public static void main(String[] args) {

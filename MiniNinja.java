@@ -1,24 +1,25 @@
 import java.util.ArrayList;
+import java.util.Hashtable;
 
-public class MiniNinja implements GamePiece, Cloneable {
+public class MiniNinja extends GamePiece implements Cloneable {
 	
-	public int col;
-	public int row;
-	public int player; // 1 = HUMAN 2 = COM
 	public char character;
+	public int attackValue;
 	
-	private ArrayList<int[]> legalMoves;
+	private Hashtable<String, Integer> legalMoves;
 	
 	public MiniNinja(int player, int row, int col) {
-		this.player = player;
-		this.row = row;
-		this.col = col;
-		if(this.player == 1) {
+		super.player = player;
+		super.row = row;
+		super.col = col;
+		if(player == 1) {
 			this.character = 'n';
+			this.attackValue = 3000;
 		} else {
 			this.character = 'i';
+			this.attackValue = -3000;
 		}
-		legalMoves = new ArrayList<>();
+		legalMoves = new Hashtable<>();
 	}
 	
 	
@@ -29,26 +30,110 @@ public class MiniNinja implements GamePiece, Cloneable {
 	}
 
 	@Override
-	public ArrayList<int[]> getMoves() {
+	public Hashtable<String, Integer> getMoves() {
 		return this.legalMoves;
 	}
 
+	@Override
+	public int getAttack() {
+		return this.attackValue;
+	}
 
 	@Override
 	public void generateMoves(ArrayList<ArrayList<GamePiece>> board) {
-
-	}
-
-	//Checks if the move abides by pieces rules and doesn't collide with additional pieces
-	@Override
-	public boolean legal(int row, int col, ArrayList<GamePiece> gamePieces) {
-		// TODO Auto-generated method stub
-		return false;
+		this.legalMoves.clear();
+		int newRow = super.row;
+		int newCol = super.col;
+		//Potential out of bounds issues, come back later
+		if(player == 1) {
+			//Check /^
+			if(newRow - 1 >= 0 && newCol + 1 < MAX_WIDTH && board.get(newRow - 1).get(newCol + 1) == null) {
+				String temp = "" + (newRow - 1) + (newCol + 1);
+				if(newRow - 2 >= 0 && board.get(newRow - 2).get(newCol + 1) != null 
+						&& board.get(newRow - 2).get(newCol + 1).player == 2) {
+					GamePiece piece = board.get(newRow - 2).get(newCol + 1);
+					legalMoves.put(temp, piece.getAttack());
+				} else {
+					legalMoves.put(temp, 0);
+				}
+			}
+			//Check ^\
+			if(newRow - 1 >= 0 && newCol - 1 >= 0 && board.get(newRow - 1).get(newCol - 1) == null) {
+				String temp = "" + (newRow - 1) + (newCol - 1);
+				if(newRow - 2 >= 0 && board.get(newRow - 2).get(newCol - 1) != null 
+						&& board.get(newRow - 2).get(newCol - 1).player == 2) {
+					GamePiece piece = board.get(newRow - 2).get(newCol - 1);
+					legalMoves.put(temp, piece.getAttack());
+				} else {
+					legalMoves.put(temp, 0);
+				}
+			}
+			
+			//Attack cases \v
+			if(newRow + 1 < MAX_HEIGHT && newCol + 1 < MAX_WIDTH && board.get(newRow + 1).get(newCol + 1) == null && board.get(newRow).get(newCol + 1) != null
+					&& board.get(newRow).get(newCol + 1).player == 2) {
+				String temp = "" + (newRow + 1) + (newCol + 1);
+				GamePiece piece = board.get(newRow).get(newCol + 1);
+				legalMoves.put(temp, piece.getAttack());
+			}
+			
+			// Check Attack v/
+			if(newRow + 1 < MAX_HEIGHT && newCol - 1 >= 0 && board.get(newRow + 1).get(newCol - 1) == null && board.get(newRow).get(newCol - 1) != null
+					&& board.get(newRow).get(newCol - 1).player == 2) {
+				String temp = "" + (newRow + 1) + (newCol - 1);
+				GamePiece piece = board.get(newRow).get(newCol - 1);
+				legalMoves.put(temp, piece.getAttack());
+			}
+			
+		} else {
+			//Check Attack /^
+			if(newRow - 1 >= 0 && newCol + 1 < MAX_WIDTH && board.get(newRow - 1).get(newCol + 1) == null  && board.get(newRow).get(newCol + 1) != null
+					&& board.get(newRow).get(newCol + 1).player == 1) {
+				String temp = "" + (newRow - 1) + (newCol + 1);
+				GamePiece piece = board.get(newRow).get(newCol + 1);
+				legalMoves.put(temp, piece.getAttack());
+			}
+			//Check Attack ^\
+			if(newRow - 1 >= 0 && newCol - 1 >= 0 && board.get(newRow - 1).get(newCol - 1) == null  && board.get(newRow).get(newCol - 1) != null
+					&& board.get(newRow).get(newCol - 1).player == 1) {
+				String temp = "" + (newRow - 1) + (newCol - 1);
+				GamePiece piece = board.get(newRow).get(newCol - 1);
+				legalMoves.put(temp, piece.getAttack());
+			}
+			
+			//Check \v
+			if(newRow + 1 < MAX_HEIGHT && newCol + 1 < MAX_WIDTH && board.get(newRow + 1).get(newCol + 1) == null) {
+				String temp = "" + (newRow + 1) + (newCol + 1);
+				if(newRow + 2 < MAX_HEIGHT && board.get(newRow + 2).get(newCol + 1) != null 
+						&& board.get(newRow + 2).get(newCol + 1).player == 1) {
+					GamePiece piece = board.get(newRow + 2).get(newCol + 1);
+					legalMoves.put(temp, piece.getAttack());
+				} else {
+					legalMoves.put(temp, 0);
+				}
+			}
+			
+			// Check v/
+			if(newRow + 1 < MAX_HEIGHT && newCol - 1 >= 0 && board.get(newRow + 1).get(newCol - 1) == null) {
+				String temp = "" + (newRow + 1) + (newCol - 1);
+				if(newRow + 2 < MAX_HEIGHT && board.get(newRow + 2).get(newCol - 1) != null 
+						&& board.get(newRow + 2).get(newCol - 1).player == 1) {
+					GamePiece piece = board.get(newRow + 2).get(newCol - 1);
+					legalMoves.put(temp, piece.getAttack());
+				} else {
+					legalMoves.put(temp, 0);
+				}
+			}
+		}
 	}
 
 	@Override
 	public Object clone() {
-		MiniNinja p = new MiniNinja(this.player, this.row, this.col);
+		MiniNinja p = new MiniNinja(super.player, super.row, super.col);
 		return p;
+	}
+	
+	public String toString() {
+		return "" + character;
 	}
 }

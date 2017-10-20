@@ -1,129 +1,202 @@
 import java.util.ArrayList;
 import java.util.Hashtable;
 
-public class Ninja implements GamePiece, Cloneable {
+public class Ninja extends GamePiece implements Cloneable {
 	
-	public int col;
-	public int row;
-	public int player; // 1 = HUMAN 2 = COM
 	public char character;
 	public int attackValue;
 	
-	private final int MAX_HEIGHT = 8;
-	private final int MAX_WIDTH = 7;
-	
 	//Potentially use a hashtable to track both legal moves AND the value behind them?
-	private Hashtable<int[], Integer> moves;
-	
-	private ArrayList<int[]> legalMoves;
+	private Hashtable<String, Integer> legalMoves;
 	
 	public Ninja(int player, int row, int col) {
-		this.player = player;
-		this.row = row;
-		this.col = col;
-		if(this.player == 1) {
+		super.player = player;
+		super.row = row;
+		super.col = col;
+		if(player == 1) {
 			this.character = 'N';
-			this.attackValue = 4000;
+			this.attackValue = 1000;
 		} else {
 			this.character = 'I';
-			this.attackValue = -4000;
+			this.attackValue = -1000;
 		}
 		
-		legalMoves = new ArrayList<>();
+		legalMoves = new Hashtable<>();
 	}
 	
 	
 	@Override
 	public void move(int[] move) {
-		this.row = move[0];
-		this.col = move[1];
-		legalMoves.clear();
+		super.row = move[0];
+		super.col = move[1];
 	}
 
 	@Override
-	public ArrayList<int[]> getMoves() {
+	public Hashtable<String, Integer> getMoves() {
 		return this.legalMoves;
 	}
 
+	@Override
+	public int getAttack() {
+		return this.attackValue;
+	}
 
 	@Override
 	public void generateMoves(ArrayList<ArrayList<GamePiece>> board) {
-		int newRow = this.row;
-		int newCol = this.col;
+		this.legalMoves.clear();
+		int newRow = super.row;
+		int newCol = super.col;
 		if(player == 1) {
-			//Check \
-			while(newRow + 1 < MAX_HEIGHT && newCol + 1 < MAX_WIDTH) {
-				newRow++;
-				newCol++;
-				//if a piece is there, you can't go on.
-				if(board.get(row).get(col) != null) {
-					break;
-				} else {
-					int[] temp = new int[2];
-					temp[0] = newRow;
-					temp[1] = newCol;
-					legalMoves.add(temp);
-				}
-			}
-			//Check /
+			//Check /^
 			while(newRow - 1 >= 0 && newCol + 1 < MAX_WIDTH) {
 				newRow--;
 				newCol++;
-				if(board.get(row).get(col) != null) {
+				//if a piece is there, you can't go on.
+				if(board.get(newRow).get(newCol) != null) {
 					break;
 				} else {
-					int[] temp = new int[2];
-					temp[0] = newRow;
-					temp[1] = newCol;
-					legalMoves.add(temp);
+					String temp = "" + newRow + newCol;
+					if(newRow - 1 >= 0 && board.get(newRow - 1).get(newCol) != null
+							&& board.get(newRow - 1).get(newCol).player == 2) {
+						GamePiece piece = board.get(newRow - 1).get(newCol);
+						legalMoves.put(temp, piece.getAttack());
+					} else {
+						legalMoves.put(temp, 0);
+					}
+				}
+			}
+			//Check ^\
+			newRow = super.row;
+			newCol = super.col;
+			while(newRow - 1 >= 0 && newCol - 1 >= 0) {
+				newRow--;
+				newCol--;
+				if(board.get(newRow).get(newCol) != null) {
+					break;
+				} else {
+					String temp = "" + newRow + newCol;
+					if(newRow - 1 >= 0 && board.get(newRow - 1).get(newCol) != null
+							&& board.get(newRow - 1).get(newCol).player == 2) {
+						GamePiece piece = board.get(newRow - 1).get(newCol);
+						legalMoves.put(temp, piece.getAttack());
+					} else {
+						legalMoves.put(temp, 0);
+					}
 				}
 			}
 			
-			//Come back later to backwards attacks
+			//Attack cases \v
+			newRow = super.row;
+			newCol = super.col;
+			while(newRow + 1 < MAX_HEIGHT && newCol + 1 < MAX_WIDTH) {
+				newRow++;
+				newCol++;
+				if(board.get(newRow).get(newCol) == null && board.get(newRow - 1).get(newCol) != null
+						&& board.get(newRow - 1).get(newCol).player == 2) {
+					String temp = "" + newRow + newCol;
+					GamePiece piece = board.get(newRow - 1).get(newCol);
+					legalMoves.put(temp, piece.getAttack());
+				} else if(board.get(newRow).get(newCol) != null) {
+					break;
+				}
+			}
+			// Check Attack v/
+			newRow = super.row;
+			newCol = super.col;
+			while(newRow + 1 < MAX_HEIGHT && newCol - 1 >= 0) {
+				newRow++;
+				newCol--;
+				if(board.get(newRow).get(newCol) == null && board.get(newRow - 1).get(newCol) != null
+						&& board.get(newRow - 1).get(newCol).player == 2) {
+					String temp = "" + newRow + newCol;
+					GamePiece piece = board.get(newRow - 1).get(newCol);
+					legalMoves.put(temp, piece.getAttack());
+				} else if(board.get(newRow).get(newCol) != null) {
+					break;
+				}
+			}
+			
+			
 		} else {
-			//Check \
+			//Check \v
 			while(newRow + 1 < MAX_HEIGHT && newCol + 1 < MAX_WIDTH) {
 				newRow++;
 				newCol++;
 				//if a piece is there, you can't go on.
-				if(board.get(row).get(col) != null) {
+				if(board.get(newRow).get(newCol) != null) {
 					break;
 				} else {
-					int[] temp = new int[2];
-					temp[0] = newRow;
-					temp[1] = newCol;
-					legalMoves.add(temp);
+					String temp = "" + newRow + newCol;
+					if(newRow + 1 < MAX_HEIGHT && board.get(newRow + 1).get(newCol) != null
+							&& board.get(newRow + 1).get(newCol).player == 1) {
+						GamePiece piece = board.get(newRow + 1).get(newCol);
+						legalMoves.put(temp, piece.getAttack());
+					} else {
+						legalMoves.put(temp, 0);
+					}
 				}
 			}
-			//Check /
-			while(newRow - 1 >= 0 && newCol + 1 < MAX_WIDTH) {
-				newRow--;
-				newCol++;
-				if(board.get(row).get(col) != null) {
+			newRow = super.row;
+			newCol = super.col;
+			//Check v/
+			while(newRow + 1 < MAX_HEIGHT && newCol - 1 >= 0) {
+				newRow++;
+				newCol--;
+				if(board.get(newRow).get(newCol) != null) {
 					break;
 				} else {
-					int[] temp = new int[2];
-					temp[0] = newRow;
-					temp[1] = newCol;
-					legalMoves.add(temp);
+					String temp = "" + newRow + newCol;
+					if(newRow + 1 < MAX_HEIGHT && board.get(newRow + 1).get(newCol) != null
+							&& board.get(newRow + 1).get(newCol).player == 1) {
+						GamePiece piece = board.get(newRow + 1).get(newCol);
+						legalMoves.put(temp, piece.getAttack());
+					} else {
+						legalMoves.put(temp, 0);
+					}
 				}
 			}
 			
-			//Come back later to backwards attacks
+			//Attack cases ^\
+			newRow = super.row;
+			newCol = super.col;
+			while(newRow - 1 >= 0 && newCol - 1 >= 0) {
+				newRow--;
+				newCol--;
+				if(board.get(newRow).get(newCol) == null && board.get(newRow + 1).get(newCol) != null
+						&& board.get(newRow + 1).get(newCol).player == 1) {
+					String temp = "" + newRow + newCol;
+					GamePiece piece = board.get(newRow + 1).get(newCol);
+					legalMoves.put(temp, piece.getAttack());
+				} else if(board.get(newRow).get(newCol) != null) {
+					break;
+				}
+			}
+			// Check /^
+			newRow = super.row;
+			newCol = super.col;
+			while(newRow - 1 >= 0 && newCol + 1 < MAX_WIDTH) {
+				newRow--;
+				newCol++;
+				if(board.get(newRow).get(newCol) == null && board.get(newRow + 1).get(newCol) != null
+						&& board.get(newRow + 1).get(newCol).player == 1) {
+					String temp = "" + newRow + newCol;
+					GamePiece piece = board.get(newRow + 1).get(newCol);
+					legalMoves.put(temp, piece.getAttack());
+				} else if(board.get(newRow).get(newCol) != null) {
+					break;
+				}
+			}
 		}
 		
 	}
 
-	//May be obsolete with generate move? we can just ensure the move selected is within the table or piece.
-	@Override
-	public boolean legal(int row, int col, ArrayList<GamePiece> gamePieces) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
 	@Override
 	public Object clone() {
-		Ninja p = new Ninja(this.player, this.row, this.col);
+		Ninja p = new Ninja(super.player, super.row, super.col);
 		return p;
+	}
+	
+	public String toString() {
+		return "" + character;
 	}
 }
