@@ -24,20 +24,19 @@ public class Alice {
 		int initPlayer = in.nextInt();
 		in.nextLine(); // clearBuffer
 		init(initPlayer);
-		String textboard = boardToString();
+		String textboard = boardToString(gameBoard);
 		System.out.println(textboard);
 		boolean gameOn = true;
 		int[][] translated = new int[2][2];
 		Hashtable<String, Integer> piecesMoves;
 		movesForPieces(gameBoard);
-		generateSmartMove();
 		while (gameOn) {
 			turnCounter++;
 			System.out.println("Turn " + turnCounter);
 			String[] moveInput = new String[2];
 			do {
 				if (currentPlayer == 1) {
-					textboard = boardToString();
+					textboard = boardToString(gameBoard);
 					System.out.println(textboard);
 					System.out.println(playerLegal);
 					// System.out.print("Enter HUMAN move (initial destination): ");
@@ -45,10 +44,10 @@ public class Alice {
 					// moveInput[1] = in.next();
 					// in.nextLine(); //buffer clear
 					moveInput = playerGenerateMove();
+					translated = translateMove(moveInput);
 				} else {
-					moveInput = generateMove();
+					translated = generateSmartMove();
 				}
-				translated = translateMove(moveInput);
 				GamePiece selected = gameBoard.get(translated[0][0]).get(translated[0][1]);
 				if (selected != null && selected.player == currentPlayer) {
 					piecesMoves = selected.getMoves();
@@ -69,7 +68,7 @@ public class Alice {
 		System.out.println("Tie game!");
 	}
 
-	public static String boardToString() {
+	public static String boardToString(ArrayList<ArrayList<GamePiece>> board) {
 		StringBuilder s = new StringBuilder();
 		s.append("  --------------- ALICE\n");
 		for (int i = 0; i < MAX_HEIGHT; i++) {
@@ -77,10 +76,10 @@ public class Alice {
 			s.append(' ');
 			for (int j = 0; j < MAX_WIDTH; j++) {
 				s.append('|');
-				if (gameBoard.get(i).get(j) == null) {
+				if (board.get(i).get(j) == null) {
 					s.append(' ');
 				} else {
-					s.append(gameBoard.get(i).get(j));
+					s.append(board.get(i).get(j));
 				}
 			}
 			s.append('|');
@@ -110,7 +109,7 @@ public class Alice {
 
 	public static void gameOver(ArrayList<ArrayList<GamePiece>> board, String additional) {
 		if (board.equals(gameBoard)) {
-			String textboard = boardToString();
+			String textboard = boardToString(gameBoard);
 			System.out.println(textboard);
 			System.out.println(additional);
 			if (currentPlayer == 1) {
@@ -149,6 +148,7 @@ public class Alice {
 
 	public static int[][] generateSmartMove() {
 		int best = Integer.MIN_VALUE;
+		int score = 0;
 		int[][] bestMove = new int[2][2]; // Maybe make this a string for easy integration
 		for (int i = 0; i < comLegalPieces.size(); i++) {
 			GamePiece current = comLegalPieces.get(i);
@@ -158,10 +158,13 @@ public class Alice {
 			for (String key : moves.keySet()) {
 				int destR = Character.getNumericValue(key.charAt(0));
 				int destC = Character.getNumericValue(key.charAt(1));
-				makeMoveOnCloned(cloned, cloned.get(moved.row).get(moved.col), destR, destC);
+				if(current == null || moved == null) {
+					System.out.println();
+				}
+				makeMoveOnCloned(cloned, cloned.get(current.row).get(current.col), destR, destC);
 				movesForPieces(cloned);
-				int score = min(cloned, 1);
-				if(score > best) {
+				score = min(cloned, 1);
+				if (score > best) {
 					bestMove[0][0] = current.row;
 					bestMove[0][1] = current.col;
 					bestMove[1][0] = moved.row;
@@ -183,7 +186,7 @@ public class Alice {
 			int high = Integer.MIN_VALUE;
 			for (int i = 0; i < MAX_HEIGHT; i++) {
 				for (int j = 0; j < MAX_WIDTH; j++) {
-					if (b.get(i).get(j) != null && b.get(i).get(j).player == 2) {
+					if (b.get(i).get(j) != null && b.get(i).get(j).player == 2 && !(b.get(i).get(j) instanceof King)) {
 						GamePiece currentPiece = b.get(i).get(j);
 						Hashtable<String, Integer> moves = currentPiece.getMoves();
 						for (String key : moves.keySet()) {
@@ -202,11 +205,17 @@ public class Alice {
 		int score = 0;
 		for (int i = 0; i < MAX_HEIGHT; i++) {
 			for (int j = 0; j < MAX_WIDTH; j++) {
-				if (b.get(i).get(j) != null && b.get(i).get(j).player == 2) {
+				if (b.get(i).get(j) != null && b.get(i).get(j).player == 2 && !(b.get(i).get(j) instanceof King)) {
 					GamePiece current = b.get(i).get(j);
+					if(current == null) {
+						System.out.println();
+					}
 					ArrayList<ArrayList<GamePiece>> cloned = cloneBoard(b);
 					Hashtable<String, Integer> moves = current.getMoves();
 					GamePiece moved = cloned.get(current.row).get(current.col);
+					if(moved == null) {
+						System.out.println();
+					}
 					for (String key : moves.keySet()) {
 						int destR = Character.getNumericValue(key.charAt(0));
 						int destC = Character.getNumericValue(key.charAt(1));
@@ -233,7 +242,7 @@ public class Alice {
 			int low = Integer.MAX_VALUE;
 			for (int i = 0; i < MAX_HEIGHT; i++) {
 				for (int j = 0; j < MAX_WIDTH; j++) {
-					if (b.get(i).get(j) != null && b.get(i).get(j).player == 1) {
+					if (b.get(i).get(j) != null && b.get(i).get(j).player == 1 && !(b.get(i).get(j) instanceof King)) {
 						GamePiece currentPiece = b.get(i).get(j);
 						Hashtable<String, Integer> moves = currentPiece.getMoves();
 						for (String key : moves.keySet()) {
@@ -252,11 +261,17 @@ public class Alice {
 		int score = 0;
 		for (int i = 0; i < MAX_HEIGHT; i++) {
 			for (int j = 0; j < MAX_WIDTH; j++) {
-				if (b.get(i).get(j) != null && b.get(i).get(j).player == 1) {
+				if (b.get(i).get(j) != null && b.get(i).get(j).player == 1 && !(b.get(i).get(j) instanceof King)) {
 					GamePiece current = b.get(i).get(j);
+					if(current == null) {
+						System.out.println();
+					}
 					ArrayList<ArrayList<GamePiece>> cloned = cloneBoard(b);
 					Hashtable<String, Integer> moves = current.getMoves();
 					GamePiece moved = cloned.get(current.row).get(current.col);
+					if(moved == null) {
+						System.out.println();
+					}
 					for (String key : moves.keySet()) {
 						int destR = Character.getNumericValue(key.charAt(0));
 						int destC = Character.getNumericValue(key.charAt(1));
@@ -279,6 +294,9 @@ public class Alice {
 	}
 
 	public static void makeMoveOnCloned(ArrayList<ArrayList<GamePiece>> b, GamePiece p, int destR, int destC) {
+		if(p == null) {
+			System.out.println();
+		}
 		int initR = p.row;
 		int initC = p.col;
 		b.get(destR).set(destC, p);
