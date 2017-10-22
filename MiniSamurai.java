@@ -15,10 +15,10 @@ public class MiniSamurai extends GamePiece implements Cloneable{
 		super.col = col;
 		if(player == 1) {
 			this.character = 's';
-			this.attackValue = 1001;
+			this.attackValue = -1000;
 		} else {
 			this.character = 'a';
-			this.attackValue = -1005;
+			this.attackValue = 1000;
 		}
 		
 		legalMoves = new Hashtable<>();
