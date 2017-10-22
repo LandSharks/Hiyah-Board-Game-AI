@@ -6,7 +6,7 @@ import java.util.Scanner;
 public class Alice {
 
 	public static ArrayList<ArrayList<GamePiece>> gameBoard;
-	public static final int MAX_DEPTH = 4;
+	public static int MAX_DEPTH = 4;
 	public static final int MAX_WIDTH = 7;
 	public static final int MAX_HEIGHT = 8;
 	public static int currentPlayer;
@@ -14,6 +14,9 @@ public class Alice {
 	public static ArrayList<String> playerLegal;
 	public static ArrayList<String> comLegal;
 	public static ArrayList<GamePiece> comLegalPieces;
+	public static long time;
+	public static int totalMovingPieces = 36;
+	public static int lastMovingPieces = 36;
 
 	public static void gameLoop() {
 		Scanner in = new Scanner(System.in);
@@ -155,6 +158,7 @@ public class Alice {
 	}
 
 	public static int[][] generateSmartMove() {
+		time = System.currentTimeMillis();
 		int[][] bestMove = new int[2][2];
 		int bestScore = Integer.MIN_VALUE;
 		ArrayList<ArrayList<GamePiece>> copyBoard = cloneBoard(gameBoard); //Copy board for moving pieces
@@ -204,7 +208,10 @@ public class Alice {
 				}
 			}
 		}
-		
+		if(System.currentTimeMillis() - time > 2500 && totalMovingPieces + 3 < lastMovingPieces) {
+			lastMovingPieces = totalMovingPieces;
+			MAX_DEPTH++;
+		}
 		return bestMove;
 	}
 
@@ -451,6 +458,7 @@ public class Alice {
 			} else if (victim instanceof MiniSamurai) {
 				board.get(destR - 1).set(destC, null);
 			}
+			totalMovingPieces--;
 		} else if (currentPlayer == 2 && checkComAttack(board, destR, destC)) {
 			System.out.println("HIYA!");
 			GamePiece victim = board.get(destR + 1).get(destC);
@@ -468,6 +476,7 @@ public class Alice {
 			} else if (victim instanceof MiniSamurai) {
 				board.get(destR + 1).set(destC, null);
 			}
+			totalMovingPieces--;
 		}
 	}
 
