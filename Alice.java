@@ -37,11 +37,11 @@ public class Alice {
 			do {
 				if (currentPlayer == 1) {
 					System.out.println(playerLegal);
-					System.out.print("Enter HUMAN move (initial destination): ");
-					moveInput[0] = in.next();
-					moveInput[1] = in.next();
-					in.nextLine(); //buffer clear
-					//moveInput = playerGenerateMove();// Random human generated moves
+//					System.out.print("Enter HUMAN move (initial destination): ");
+//					moveInput[0] = in.next();
+//					moveInput[1] = in.next();
+//					in.nextLine(); //buffer clear
+					moveInput = playerGenerateMove();// Random human generated moves
 					translated = translateMove(moveInput);
 				} else {
 					translated = generateSmartMove();
