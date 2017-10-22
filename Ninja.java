@@ -15,7 +15,7 @@ public class Ninja extends GamePiece implements Cloneable {
 		super.col = col;
 		if(player == 1) {
 			this.character = 'N';
-			this.attackValue = 1000;
+			this.attackValue = 1002;
 		} else {
 			this.character = 'I';
 			this.attackValue = -1000;

@@ -15,10 +15,10 @@ public class Samurai extends GamePiece implements Cloneable {
 		super.col = col;
 		if(player == 1) {
 			this.character = 'S';
-			this.attackValue = 2000;
+			this.attackValue = 1003;
 		} else {
 			this.character = 'A';
-			this.attackValue = -2000;
+			this.attackValue = -1004;
 		}
 		legalMoves = new Hashtable<>();
 	}
