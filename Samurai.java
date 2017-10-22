@@ -15,10 +15,10 @@ public class Samurai extends GamePiece implements Cloneable {
 		super.col = col;
 		if(player == 1) {
 			this.character = 'S';
-			this.attackValue = 1003;
+			this.attackValue = -1005;
 		} else {
 			this.character = 'A';
-			this.attackValue = -1004;
+			this.attackValue = 1005;
 		}
 		legalMoves = new Hashtable<>();
 	}
@@ -50,12 +50,12 @@ public class Samurai extends GamePiece implements Cloneable {
 			while(newRow - 1 >= 0) {
 				newRow--;
 				if(board.get(newRow).get(newCol) != null) {
-					if(board.get(newRow).get(newCol).player == 2) {
+					if(board.get(newRow).get(newCol).player == 2 && newRow != super.row) {
 						GamePiece piece = board.get(newRow).get(newCol);
 						legalMoves.put("" + (newRow + 1) + newCol, piece.getAttack());
 					}
 					break;
-				} else {
+				} else if(newRow != super.row){
 					String temp = "" + newRow + newCol;
 					legalMoves.put(temp, 0);
 				}
@@ -64,7 +64,8 @@ public class Samurai extends GamePiece implements Cloneable {
 			newRow = super.row;
 			while(newCol - 1 >= 0 && newRow - 1 >= 0) {
 				newCol--;
-				if(board.get(newRow).get(newCol) == null && board.get(newRow - 1).get(newCol) != null && board.get(newRow - 1).get(newCol).player == 2) {
+				if(board.get(newRow).get(newCol) == null && board.get(newRow - 1).get(newCol) != null && board.get(newRow - 1).get(newCol).player == 2
+						&& newCol != super.col) {
 					String temp = "" + newRow + newCol;
 					GamePiece piece = board.get(newRow - 1).get(newCol);
 					legalMoves.put(temp, piece.getAttack());
@@ -76,7 +77,8 @@ public class Samurai extends GamePiece implements Cloneable {
 			newCol = super.col;
 			while(newCol + 1 < MAX_WIDTH && newRow - 1 >= 0) {
 				newCol++;
-				if(board.get(newRow).get(newCol) == null && board.get(newRow - 1).get(newCol) != null && board.get(newRow - 1).get(newCol).player == 2) {
+				if(board.get(newRow).get(newCol) == null && board.get(newRow - 1).get(newCol) != null && board.get(newRow - 1).get(newCol).player == 2
+						&& newCol != super.col) {
 					String temp = "" + newRow + newCol;
 					GamePiece piece = board.get(newRow - 1).get(newCol);
 					legalMoves.put(temp, piece.getAttack());
@@ -89,12 +91,12 @@ public class Samurai extends GamePiece implements Cloneable {
 			while(newRow + 1 < MAX_HEIGHT) {
 				newRow++;
 				if(board.get(newRow).get(newCol) != null) {
-					if(board.get(newRow).get(newCol).player == 1) {
+					if(board.get(newRow).get(newCol).player == 1 && newRow != super.row) {
 						GamePiece piece = board.get(newRow).get(newCol);
 						legalMoves.put("" + (newRow - 1) + newCol, piece.getAttack());
 					}
 					break;
-				} else {
+				} else if(newRow != super.row){
 					String temp = "" + newRow + newCol;
 					legalMoves.put(temp, 0);
 				}
@@ -103,7 +105,8 @@ public class Samurai extends GamePiece implements Cloneable {
 			newRow = super.row;
 			while(newCol - 1 >= 0 && newRow + 1 < MAX_HEIGHT) {
 				newCol--;
-				if(board.get(newRow).get(newCol) == null && board.get(newRow + 1).get(newCol) != null && board.get(newRow + 1).get(newCol).player == 1) {
+				if(board.get(newRow).get(newCol) == null && board.get(newRow + 1).get(newCol) != null && board.get(newRow + 1).get(newCol).player == 1
+						&& newCol != super.col) {
 					String temp = "" + newRow + newCol;
 					GamePiece piece = board.get(newRow + 1).get(newCol);
 					legalMoves.put(temp, piece.getAttack());
@@ -115,7 +118,8 @@ public class Samurai extends GamePiece implements Cloneable {
 			newCol = super.col;
 			while(newCol + 1 < MAX_WIDTH && newRow + 1 < MAX_HEIGHT) {
 				newCol++;
-				if(board.get(newRow).get(newCol) == null && board.get(newRow + 1).get(newCol) != null && board.get(newRow + 1).get(newCol).player == 1) {
+				if(board.get(newRow).get(newCol) == null && board.get(newRow + 1).get(newCol) != null && board.get(newRow + 1).get(newCol).player == 1
+						&& newCol != super.col) {
 					String temp = "" + newRow + newCol;
 					GamePiece piece = board.get(newRow + 1).get(newCol);
 					legalMoves.put(temp, piece.getAttack());

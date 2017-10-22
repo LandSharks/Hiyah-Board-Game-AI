@@ -6,7 +6,7 @@ import java.util.Scanner;
 public class Alice {
 
 	public static ArrayList<ArrayList<GamePiece>> gameBoard;
-	public static final int MAX_DEPTH = 5;
+	public static final int MAX_DEPTH = 4;
 	public static final int MAX_WIDTH = 7;
 	public static final int MAX_HEIGHT = 8;
 	public static int currentPlayer;
@@ -41,7 +41,7 @@ public class Alice {
 					moveInput[0] = in.next();
 					moveInput[1] = in.next();
 					in.nextLine(); //buffer clear
-					//moveInput = playerGenerateMove(); Random human generated moves
+					//moveInput = playerGenerateMove();// Random human generated moves
 					translated = translateMove(moveInput);
 				} else {
 					translated = generateSmartMove();
@@ -69,7 +69,8 @@ public class Alice {
 				currentPlayer--;
 			}
 		}
-		System.out.println("Tie game!");
+		System.out.println("Tie game! Hit enter to close!");
+		in.nextLine();
 	}
 
 	public static String boardToString(ArrayList<ArrayList<GamePiece>> board) {
@@ -121,6 +122,9 @@ public class Alice {
 			} else {
 				System.out.println("Alice WINS!");
 			}
+			System.out.println("Hit enter to close");
+			Scanner in = new Scanner(System.in);
+			in.nextLine();
 			System.exit(1);
 		}
 	}
@@ -176,7 +180,7 @@ public class Alice {
 								bestScore = moves.get(key);
 								return bestMove;
 							}
-							makeMoveOnCloned(copyBoard, piece, destR, destC);
+							makeMoveOnCloned(copyBoard, piece, destR, destC, 2);
 							
 							int score = min(copyBoard, 1, bestScore); //begin minmax
 							//Change to best scoring move
@@ -186,6 +190,9 @@ public class Alice {
 								bestMove[1][0] = destR;
 								bestMove[1][1] = destC;
 								bestScore = score;
+							}
+							if(originalR == destR && destC == originalC) {
+								System.out.println();
 							}
 							//board retract move
 							piece.row = originalR;
@@ -206,32 +213,19 @@ public class Alice {
 		ArrayList<ArrayList<GamePiece>> copyBoard = cloneBoard(board);
 		getNewMovesForCloned(copyBoard); //Generate all possible moves available for the current state.
 		if(depth > MAX_DEPTH) {	//At max depth, iterate through possible moves on board
-			int score = Integer.MIN_VALUE;
-			for(int i = 0; i < MAX_HEIGHT; i++) {
-				for(int j = 0; j < MAX_WIDTH; j++) {
-					if(copyBoard.get(i).get(j) != null && copyBoard.get(i).get(j).player == 2
-							&& !(copyBoard.get(i).get(j) instanceof King)) {
-						GamePiece piece = copyBoard.get(i).get(j);
-						Hashtable<String, Integer> moves = piece.getMoves();
-						for(String key: moves.keySet()) {
-							if(moves.get(key) > score) {
-								score = moves.get(key);
-							}
-							if(score > beta) {
-								return beta;
-							}
-						}
-					}
-				}
-			}
-			return score - depth;
+			int score = 0;
+			score = getBoardState(copyBoard);
+			if(score > beta) {
+				return beta;
+			}		
+			return score;
 		} else if(copyBoard.get(6).get(4) != null && copyBoard.get(6).get(4).player == 2) {
 			return Integer.MAX_VALUE - depth;
 		} else {
 			int bestScore = Integer.MIN_VALUE;
 			for(int i = 0; i < MAX_HEIGHT; i++) {
 				for(int j = 0; j < MAX_WIDTH; j++) {
-					if(copyBoard.get(i).get(j) != null && copyBoard.get(i).get(j).player == 1
+					if(copyBoard.get(i).get(j) != null && copyBoard.get(i).get(j).player == 2
 							&& !(copyBoard.get(i).get(j) instanceof King)) {
 						GamePiece piece = copyBoard.get(i).get(j);
 						int originalR = piece.row;
@@ -240,7 +234,7 @@ public class Alice {
 						for(String key: moves.keySet()) {
 							int destR = Character.getNumericValue(key.charAt(0));
 							int destC = Character.getNumericValue(key.charAt(1));
-							makeMoveOnCloned(copyBoard, piece, destR, destC);
+							makeMoveOnCloned(copyBoard, piece, destR, destC, 2);
 							
 							int score = min(copyBoard, depth + 1, bestScore);
 							if(score > bestScore) {
@@ -258,7 +252,7 @@ public class Alice {
 				}
 			}
 			
-			return bestScore - depth;
+			return bestScore;
 		}
 	}
 
@@ -267,25 +261,12 @@ public class Alice {
 		ArrayList<ArrayList<GamePiece>> copyBoard = cloneBoard(board);
 		getNewMovesForCloned(copyBoard); //Generate all possible moves available for the current state.
 		if(depth > MAX_DEPTH) { //If as deep as possible, iterate through all possible moves
-			int score = Integer.MAX_VALUE;
-			for(int i = 0; i < MAX_HEIGHT; i++) {
-				for(int j = 0; j < MAX_WIDTH; j++) {
-					if(copyBoard.get(i).get(j) != null && copyBoard.get(i).get(j).player == 1
-							&& !(copyBoard.get(i).get(j) instanceof King)) {
-						GamePiece piece = copyBoard.get(i).get(j);
-						Hashtable<String, Integer> moves = piece.getMoves();
-						for(String key: moves.keySet()) {
-							if(moves.get(key) < score) {
-								score = moves.get(key);
-							}
-							if(score > alpha) {
-								return alpha;
-							}
-						}
-					}
-				}
-			}
-			return score + depth;
+			int score = 0;
+			score = getBoardState(copyBoard);
+			if(score < alpha) {
+				return alpha;
+			}		
+			return score;
 		} else if(copyBoard.get(1).get(4) != null && copyBoard.get(1).get(4).player == 1) { //Check if player has finishing move
 			return Integer.MIN_VALUE + depth;
 		} else { //Iterate through possible moves and call MAX
@@ -301,7 +282,7 @@ public class Alice {
 						for(String key: moves.keySet()) {
 							int destR = Character.getNumericValue(key.charAt(0));
 							int destC = Character.getNumericValue(key.charAt(1));
-							makeMoveOnCloned(copyBoard, piece, destR, destC);
+							makeMoveOnCloned(copyBoard, piece, destR, destC, 1);
 							
 							int score = max(copyBoard, depth + 1, worstScore);
 							if(score < worstScore) {
@@ -320,17 +301,61 @@ public class Alice {
 				}
 			}
 			
-			return worstScore + depth;
+			return worstScore;
 		}
 	}
+	
+	public static int getBoardState(ArrayList<ArrayList<GamePiece>> board) {
+		int sum = 0;
+		for(int i = 0; i < MAX_HEIGHT; i++) {
+			for(int j = 0; j < MAX_WIDTH; j++) {
+				if(board.get(i).get(j) != null) {
+					sum += board.get(i).get(j).getAttack();
+				}
+			}
+		}
+		
+		return sum;
+	}
 
-	public static void makeMoveOnCloned(ArrayList<ArrayList<GamePiece>> b, GamePiece p, int destR, int destC) {
+	public static void makeMoveOnCloned(ArrayList<ArrayList<GamePiece>> b, GamePiece p, int destR, int destC, int player) {
 		int initR = p.row;
 		int initC = p.col;
 		b.get(destR).set(destC, p);
 		p.row = destR;
 		p.col = destC;
 		b.get(initR).set(initC, null);
+		if(player == 1 && checkPlayerAttack(b, destR, destC)) {
+			GamePiece victim = b.get(destR - 1).get(destC);
+			if (victim instanceof King) {
+				b.get(destR - 1).set(destC, null);
+			} else if (victim instanceof Ninja) {
+				MiniNinja newPiece = new MiniNinja(2, destR - 1, destC);
+				b.get(destR - 1).set(destC, newPiece);
+			} else if (victim instanceof Samurai) {
+				MiniSamurai newPiece = new MiniSamurai(2, destR - 1, destC);
+				b.get(destR - 1).set(destC, newPiece);
+			} else if (victim instanceof MiniNinja) {
+				b.get(destR - 1).set(destC, null);
+			} else if (victim instanceof MiniSamurai) {
+				b.get(destR - 1).set(destC, null);
+			}
+		} else if(player == 2 && checkComAttack(b, destR, destC)) {
+			GamePiece victim = b.get(destR + 1).get(destC);
+			if (victim instanceof King) {
+				b.get(destR + 1).set(destC, null);
+			} else if (victim instanceof Ninja) {
+				MiniNinja newPiece = new MiniNinja(2, destR + 1, destC);
+				b.get(destR + 1).set(destC, newPiece);
+			} else if (victim instanceof Samurai) {
+				MiniSamurai newPiece = new MiniSamurai(2, destR + 1, destC);
+				b.get(destR + 1).set(destC, newPiece);
+			} else if (victim instanceof MiniNinja) {
+				b.get(destR + 1).set(destC, null);
+			} else if (victim instanceof MiniSamurai) {
+				b.get(destR + 1).set(destC, null);
+			}
+		}
 	}
 	
 	public static void getNewMovesForCloned(ArrayList<ArrayList<GamePiece>> board) {

@@ -15,10 +15,10 @@ public class Ninja extends GamePiece implements Cloneable {
 		super.col = col;
 		if(player == 1) {
 			this.character = 'N';
-			this.attackValue = 1002;
+			this.attackValue = -1005;
 		} else {
 			this.character = 'I';
-			this.attackValue = -1000;
+			this.attackValue = 1005;
 		}
 		
 		legalMoves = new Hashtable<>();
@@ -57,10 +57,11 @@ public class Ninja extends GamePiece implements Cloneable {
 				} else {
 					String temp = "" + newRow + newCol;
 					if(newRow - 1 >= 0 && board.get(newRow - 1).get(newCol) != null
-							&& board.get(newRow - 1).get(newCol).player == 2) {
+							&& board.get(newRow - 1).get(newCol).player == 2
+							&& newRow != super.row && newCol != super.col) {
 						GamePiece piece = board.get(newRow - 1).get(newCol);
 						legalMoves.put(temp, piece.getAttack());
-					} else {
+					} else if(newRow != super.row && newCol != super.col){
 						legalMoves.put(temp, 0);
 					}
 				}
@@ -76,10 +77,11 @@ public class Ninja extends GamePiece implements Cloneable {
 				} else {
 					String temp = "" + newRow + newCol;
 					if(newRow - 1 >= 0 && board.get(newRow - 1).get(newCol) != null
-							&& board.get(newRow - 1).get(newCol).player == 2) {
+							&& board.get(newRow - 1).get(newCol).player == 2
+							&& newRow != super.row && newCol != super.col) {
 						GamePiece piece = board.get(newRow - 1).get(newCol);
 						legalMoves.put(temp, piece.getAttack());
-					} else {
+					} else if(newRow != super.row && newCol != super.col){
 						legalMoves.put(temp, 0);
 					}
 				}
@@ -92,7 +94,8 @@ public class Ninja extends GamePiece implements Cloneable {
 				newRow++;
 				newCol++;
 				if(board.get(newRow).get(newCol) == null && board.get(newRow - 1).get(newCol) != null
-						&& board.get(newRow - 1).get(newCol).player == 2) {
+						&& board.get(newRow - 1).get(newCol).player == 2
+						&& newRow != super.row && newCol != super.col) {
 					String temp = "" + newRow + newCol;
 					GamePiece piece = board.get(newRow - 1).get(newCol);
 					legalMoves.put(temp, piece.getAttack());
@@ -107,7 +110,8 @@ public class Ninja extends GamePiece implements Cloneable {
 				newRow++;
 				newCol--;
 				if(board.get(newRow).get(newCol) == null && board.get(newRow - 1).get(newCol) != null
-						&& board.get(newRow - 1).get(newCol).player == 2) {
+						&& board.get(newRow - 1).get(newCol).player == 2
+						&& newRow != super.row && newCol != super.col) {
 					String temp = "" + newRow + newCol;
 					GamePiece piece = board.get(newRow - 1).get(newCol);
 					legalMoves.put(temp, piece.getAttack());
@@ -128,10 +132,11 @@ public class Ninja extends GamePiece implements Cloneable {
 				} else {
 					String temp = "" + newRow + newCol;
 					if(newRow + 1 < MAX_HEIGHT && board.get(newRow + 1).get(newCol) != null
-							&& board.get(newRow + 1).get(newCol).player == 1) {
+							&& board.get(newRow + 1).get(newCol).player == 1
+							&& newRow != super.row && newCol != super.col) {
 						GamePiece piece = board.get(newRow + 1).get(newCol);
 						legalMoves.put(temp, piece.getAttack());
-					} else {
+					} else if(newRow != super.row && newCol != super.col) {
 						legalMoves.put(temp, 0);
 					}
 				}
@@ -147,10 +152,11 @@ public class Ninja extends GamePiece implements Cloneable {
 				} else {
 					String temp = "" + newRow + newCol;
 					if(newRow + 1 < MAX_HEIGHT && board.get(newRow + 1).get(newCol) != null
-							&& board.get(newRow + 1).get(newCol).player == 1) {
+							&& board.get(newRow + 1).get(newCol).player == 1
+							&& newRow != super.row && newCol != super.col) {
 						GamePiece piece = board.get(newRow + 1).get(newCol);
 						legalMoves.put(temp, piece.getAttack());
-					} else {
+					} else if(newRow != super.row && newCol != super.col) {
 						legalMoves.put(temp, 0);
 					}
 				}
@@ -163,7 +169,8 @@ public class Ninja extends GamePiece implements Cloneable {
 				newRow--;
 				newCol--;
 				if(board.get(newRow).get(newCol) == null && board.get(newRow + 1).get(newCol) != null
-						&& board.get(newRow + 1).get(newCol).player == 1) {
+						&& board.get(newRow + 1).get(newCol).player == 1
+						&& newRow != super.row && newCol != super.col) {
 					String temp = "" + newRow + newCol;
 					GamePiece piece = board.get(newRow + 1).get(newCol);
 					legalMoves.put(temp, piece.getAttack());
@@ -178,7 +185,8 @@ public class Ninja extends GamePiece implements Cloneable {
 				newRow--;
 				newCol++;
 				if(board.get(newRow).get(newCol) == null && board.get(newRow + 1).get(newCol) != null
-						&& board.get(newRow + 1).get(newCol).player == 1) {
+						&& board.get(newRow + 1).get(newCol).player == 1
+						&& newRow != super.row && newCol != super.col) {
 					String temp = "" + newRow + newCol;
 					GamePiece piece = board.get(newRow + 1).get(newCol);
 					legalMoves.put(temp, piece.getAttack());
