@@ -14,10 +14,10 @@ public class MiniNinja extends GamePiece implements Cloneable {
 		super.col = col;
 		if(player == 1) {
 			this.character = 'n';
-			this.attackValue = 3000;
+			this.attackValue = 1004;
 		} else {
 			this.character = 'i';
-			this.attackValue = -3000;
+			this.attackValue = -1000;
 		}
 		legalMoves = new Hashtable<>();
 	}

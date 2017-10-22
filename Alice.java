@@ -6,7 +6,7 @@ import java.util.Scanner;
 public class Alice {
 
 	public static ArrayList<ArrayList<GamePiece>> gameBoard;
-	public static final int MAX_DEPTH = 3;
+	public static final int MAX_DEPTH = 5;
 	public static final int MAX_WIDTH = 7;
 	public static final int MAX_HEIGHT = 8;
 	public static int currentPlayer;
@@ -36,14 +36,12 @@ public class Alice {
 			String[] moveInput = new String[2];
 			do {
 				if (currentPlayer == 1) {
-					textboard = boardToString(gameBoard);
-					System.out.println(textboard);
 					System.out.println(playerLegal);
-					// System.out.print("Enter HUMAN move (initial destination): ");
-					// moveInput[0] = in.next();
-					// moveInput[1] = in.next();
-					// in.nextLine(); //buffer clear
-					moveInput = playerGenerateMove();
+					System.out.print("Enter HUMAN move (initial destination): ");
+					moveInput[0] = in.next();
+					moveInput[1] = in.next();
+					in.nextLine(); //buffer clear
+					//moveInput = playerGenerateMove(); Random human generated moves
 					translated = translateMove(moveInput);
 				} else {
 					translated = generateSmartMove();
@@ -59,9 +57,15 @@ public class Alice {
 			updateBoard(gameBoard, translated[0][0], translated[0][1], translated[1][0], translated[1][1]);
 			movesForPieces(gameBoard);
 			gameOn = checkTie();
+			textboard = boardToString(gameBoard);
+			System.out.println(textboard);
 			if (currentPlayer == 1) {
 				currentPlayer++;
 			} else {
+				String compMove = reverseTranslate(translated[0][0], translated[0][1]) + " -> " + reverseTranslate(translated[1][0], translated[1][1]);
+				String reverseMove = inverse(translated[0][0], translated[0][1]) + " -> " + inverse(translated[1][0], translated[1][1]);
+				System.out.println("Alice moves: " + compMove);
+				System.out.println("Inverse moved: " + reverseMove);
 				currentPlayer--;
 			}
 		}
@@ -156,7 +160,7 @@ public class Alice {
 				//Only interested in comPieces at this time. Using gameBoard currently for bug dectection on copy board
 				if(gameBoard.get(i).get(j) != null && !(gameBoard.get(i).get(j) instanceof King) 
 						&& gameBoard.get(i).get(j).player == 2) {
-					GamePiece piece = copyBoard.get(i).get(j);
+					GamePiece piece = gameBoard.get(i).get(j);
 					int originalR = piece.row;
 					int originalC = piece.col;
 					Hashtable<String, Integer> moves = piece.getMoves();
@@ -164,9 +168,17 @@ public class Alice {
 						for(String key: moves.keySet()) {
 							int destR = Character.getNumericValue(key.charAt(0));
 							int destC = Character.getNumericValue(key.charAt(1));
+							if(destR == 6 && destC == 3) {
+								bestMove[0][0] = originalR;
+								bestMove[0][1] = originalC;
+								bestMove[1][0] = destR;
+								bestMove[1][1] = destC;
+								bestScore = moves.get(key);
+								return bestMove;
+							}
 							makeMoveOnCloned(copyBoard, piece, destR, destC);
 							
-							int score = min(copyBoard, 1); //begin minmax
+							int score = min(copyBoard, 1, bestScore); //begin minmax
 							//Change to best scoring move
 							if(score > bestScore) {
 								bestMove[0][0] = originalR;
@@ -189,13 +201,127 @@ public class Alice {
 		return bestMove;
 	}
 
-	// Maybe return gameMove?
-	public static int max(ArrayList<ArrayList<GamePiece>> b, int depth) {
-		return 1;
+	// Max is COMPUTERS MOVE
+	public static int max(ArrayList<ArrayList<GamePiece>> board, int depth, int beta) {
+		ArrayList<ArrayList<GamePiece>> copyBoard = cloneBoard(board);
+		getNewMovesForCloned(copyBoard); //Generate all possible moves available for the current state.
+		if(depth > MAX_DEPTH) {	//At max depth, iterate through possible moves on board
+			int score = Integer.MIN_VALUE;
+			for(int i = 0; i < MAX_HEIGHT; i++) {
+				for(int j = 0; j < MAX_WIDTH; j++) {
+					if(copyBoard.get(i).get(j) != null && copyBoard.get(i).get(j).player == 2
+							&& !(copyBoard.get(i).get(j) instanceof King)) {
+						GamePiece piece = copyBoard.get(i).get(j);
+						Hashtable<String, Integer> moves = piece.getMoves();
+						for(String key: moves.keySet()) {
+							if(moves.get(key) > score) {
+								score = moves.get(key);
+							}
+							if(score > beta) {
+								return beta;
+							}
+						}
+					}
+				}
+			}
+			return score - depth;
+		} else if(copyBoard.get(6).get(4) != null && copyBoard.get(6).get(4).player == 2) {
+			return Integer.MAX_VALUE - depth;
+		} else {
+			int bestScore = Integer.MIN_VALUE;
+			for(int i = 0; i < MAX_HEIGHT; i++) {
+				for(int j = 0; j < MAX_WIDTH; j++) {
+					if(copyBoard.get(i).get(j) != null && copyBoard.get(i).get(j).player == 1
+							&& !(copyBoard.get(i).get(j) instanceof King)) {
+						GamePiece piece = copyBoard.get(i).get(j);
+						int originalR = piece.row;
+						int originalC = piece.col;
+						Hashtable<String, Integer> moves = piece.getMoves();
+						for(String key: moves.keySet()) {
+							int destR = Character.getNumericValue(key.charAt(0));
+							int destC = Character.getNumericValue(key.charAt(1));
+							makeMoveOnCloned(copyBoard, piece, destR, destC);
+							
+							int score = min(copyBoard, depth + 1, bestScore);
+							if(score > bestScore) {
+								bestScore = score;
+							}
+							if(bestScore > beta) {
+								return beta;
+							}
+							piece.row = originalR;
+							piece.col = originalC;
+							copyBoard.get(piece.row).set(piece.col, piece);
+							copyBoard.get(destR).set(destC, null);
+						}
+					}
+				}
+			}
+			
+			return bestScore - depth;
+		}
 	}
 
-	public static int min(ArrayList<ArrayList<GamePiece>> b, int depth) {
-		return 1;
+	//Min is PLAYERS MOVE
+	public static int min(ArrayList<ArrayList<GamePiece>> board, int depth, int alpha) {
+		ArrayList<ArrayList<GamePiece>> copyBoard = cloneBoard(board);
+		getNewMovesForCloned(copyBoard); //Generate all possible moves available for the current state.
+		if(depth > MAX_DEPTH) { //If as deep as possible, iterate through all possible moves
+			int score = Integer.MAX_VALUE;
+			for(int i = 0; i < MAX_HEIGHT; i++) {
+				for(int j = 0; j < MAX_WIDTH; j++) {
+					if(copyBoard.get(i).get(j) != null && copyBoard.get(i).get(j).player == 1
+							&& !(copyBoard.get(i).get(j) instanceof King)) {
+						GamePiece piece = copyBoard.get(i).get(j);
+						Hashtable<String, Integer> moves = piece.getMoves();
+						for(String key: moves.keySet()) {
+							if(moves.get(key) < score) {
+								score = moves.get(key);
+							}
+							if(score > alpha) {
+								return alpha;
+							}
+						}
+					}
+				}
+			}
+			return score + depth;
+		} else if(copyBoard.get(1).get(4) != null && copyBoard.get(1).get(4).player == 1) { //Check if player has finishing move
+			return Integer.MIN_VALUE + depth;
+		} else { //Iterate through possible moves and call MAX
+			int worstScore = Integer.MAX_VALUE;
+			for(int i = 0; i < MAX_HEIGHT; i++) {
+				for(int j = 0; j < MAX_WIDTH; j++) {
+					if(copyBoard.get(i).get(j) != null && copyBoard.get(i).get(j).player == 1
+							&& !(copyBoard.get(i).get(j) instanceof King)) {
+						GamePiece piece = copyBoard.get(i).get(j);
+						int originalR = piece.row;
+						int originalC = piece.col;
+						Hashtable<String, Integer> moves = piece.getMoves();
+						for(String key: moves.keySet()) {
+							int destR = Character.getNumericValue(key.charAt(0));
+							int destC = Character.getNumericValue(key.charAt(1));
+							makeMoveOnCloned(copyBoard, piece, destR, destC);
+							
+							int score = max(copyBoard, depth + 1, worstScore);
+							if(score < worstScore) {
+								worstScore = score;
+							}
+							if(worstScore < alpha) {
+								return alpha;
+							}
+							//retract move on copyBoard
+							piece.row = originalR;
+							piece.col = originalC;
+							copyBoard.get(piece.row).set(piece.col, piece);
+							copyBoard.get(destR).set(destC, null);
+						}
+					}
+				}
+			}
+			
+			return worstScore + depth;
+		}
 	}
 
 	public static void makeMoveOnCloned(ArrayList<ArrayList<GamePiece>> b, GamePiece p, int destR, int destC) {
@@ -266,6 +392,14 @@ public class Alice {
 		char colC = (char) (col + 65);
 		build.append(colC);
 		build.append(8 - (row));
+		return build.toString();
+	}
+	
+	public static String inverse(int row, int col) {
+		StringBuilder build = new StringBuilder();
+		char colC = (char) (71 - col);
+		build.append(colC);
+		build.append(row + 1);
 		return build.toString();
 	}
 

@@ -12,7 +12,7 @@ public class King extends GamePiece implements Cloneable{
 		super.col = col;
 		this.character = 'K';
 		if(player == 1) {
-			attackValue = Integer.MAX_VALUE;
+			attackValue = 1006;
 		} else {
 			attackValue = Integer.MIN_VALUE;
 		}
