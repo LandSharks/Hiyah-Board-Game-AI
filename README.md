@@ -119,4 +119,8 @@ Alice uses Minimax algorithm and Alpha-beta pruning for decision making. The Hue
 
 Alice uses an experimental version of Iterative Deepening in order for it to still be fast, but challenging as the game goes on. Alice is very good against begineer players and is able to close out games sometimes in 5 turns. However, as the game progresses Alice tends to leave its King open for attack and I am looking for ways to prevent this.
 
-Additionally, I am looking into alternative hueristics to hopefully provide Alice a stronger edge.
+Additionally, I am looking into alternative hueristics to hopefully provide Alice a stronger edge. 
+
+### Additional Notes
+
+Had I been under less time contraints, I would probably have redone the entire design of Alice so that the lines of code in a class is signfigantly reduced. I hope to come back to the project either later in the semester or after I graduate to improve the project.
